@@ -25,10 +25,12 @@ async function playerMatch(playerID) {
 async function playerSearch(username) {
     const response = await fetch(`https://www.elevenvr.club/accounts/search/${username}`);
     const json = await response.json();
-    const string = JSON.stringify(json.data[0].id);
-    const stringFix = string.replaceAll('"','');
-    console.log(stringFix);
-    return stringFix;
+    return json;
+}
+
+function stringFix(str) {
+    const strFix = str.replaceAll('"', '');
+    return strFix;
 }
 
 client.on('messageCreate', message => {
@@ -37,22 +39,47 @@ client.on('messageCreate', message => {
 
     async function callMe() {
         if (message.content.startsWith(prefix)) {
+
             const array = message.content;
             const alter = array.slice(3);
-            message.channel.send(alter);
-            const playerID = await playerSearch(alter);
-            const test = await playerMatch(playerID);
-            message.channel.send(playerID);
-            message.channel.send(test);
+            const playerJSON = await playerSearch(alter);
+            const playerID = JSON.stringify(playerJSON.data[0].id);
+            const playerELO = JSON.stringify(playerJSON.data[0].attributes.elo);
+            const playerRank = JSON.stringify(playerJSON.data[0].attributes.rank);
+            const playerWins = playerJSON.data[0].attributes.wins;
+            const playerLoss = playerJSON.data[0].attributes.losses;
+            const playerPercent = ((playerWins / (playerWins + playerLoss)) * 100).toFixed(2);
+            const userTemp = JSON.stringify(playerJSON['data'][0]['attributes']['user-name']);
+            const playerUserName = userTemp.toLowerCase();
 
-            const embed = new MessageEmbed()
+            const embedTrue = new MessageEmbed()
                 .setColor('#ff0000')
-                .setTitle(`${alter}'s Profile`)
-                .setURL(`https://elevenvr.net/eleven/${playerID}`)
-                .setDescription('Player Details')
+                .setTitle(`${stringFix(userTemp)}'s Profile`)
+                .setURL(`https://elevenvr.net/eleven/${stringFix(playerID)}`)
+                .setDescription('Player Details:')
+                .addFields(
+                    { name: 'ELO', value: `${playerELO}`, inline: true },
+                    { name: 'Rank', value: `${playerRank}`, inline: true },
+                    { name: 'Win %', value: `${playerPercent}%` },
+                    { name: 'Wins', value: `${playerWins}`, inline: true },
+                    { name: 'Losses', value: `${playerLoss}`, inline: true },
+                )
                 .setFooter({ text: 'Eleven Table Tennis' });
 
-            message.channel.send({ embeds: [embed] });
+
+            const embedFalse = new MessageEmbed()
+                .setColor('#ff0000')
+                .setTitle('User not found')
+                .setFooter({ text: 'Eleven Table Tennis' });
+
+            if (stringFix(playerUserName).includes(alter.toLowerCase())) {
+                message.channel.send({ embeds: [embedTrue] });
+            } else {
+                message.channel.send({ embeds: [embedFalse] });
+            }
+
+            
+
         }
     }
     callMe();
