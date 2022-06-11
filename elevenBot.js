@@ -1,5 +1,8 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
+require("dotenv").config();
+
+var TOKEN = process.env.TOKEN;
 
 client.on('message', message => {
     if (message.content === '!hello') {
@@ -11,4 +14,4 @@ client.once('ready', () => {
     console.log('Ready!');
 })
 
-client.login('YOUR-TOKEN-HERE')
+client.login(TOKEN);
