@@ -4,9 +4,9 @@ require("dotenv").config();
 
 var TOKEN = process.env.TOKEN;
 
-client.on('message', message => {
-    if (message.content === '!hello') {
-        message.channel.send('Hello World!');
+client.on('messageCreate', message => {
+    if (message.content === '!e') {
+        message.channel.send('Testing');
     }
 })
 
