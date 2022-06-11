@@ -1,2 +1,2 @@
 # elevenBot
-Discord bot for Eleven Table Tennis stats
+Discord bot for Eleven Table Tennis stats.
