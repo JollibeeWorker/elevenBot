@@ -32,6 +32,46 @@ function getCommand(str) {
     return command;
 }
 
+function playerID(json) {
+    const id = json.data[0].id;
+    return id;
+}
+
+function playerELO(json) {
+    const ELO = json.data[0].elo;
+    return ELO;
+}
+
+function playerRank(json) {
+    const rank = JSON.stringify(json.data[0].attributes.rank);
+    return rank;
+}
+
+function playerWins(json) {
+    const wins = json.data[0].attributes.wins;
+    return wins;
+}
+
+function playerLoss(json) {
+    const loss = json.data[0].attributes.losses;
+    return loss;
+}
+
+function playerPercent(wins, loss) {
+    const percent = ((wins / (wins + loss)) * 100).toFixed(2);
+    return percent;
+}
+
+function rawUser(json) {
+    const raw = JSON.stringify(json['data'][0]['attributes']['user-name']);
+    return raw;
+}
+
+function playerUserName(raw) {
+    const userName = raw.toLowerCase();
+    return userName
+}
+
 client.on('messageCreate', message => {
 
     var prefix = '!e ';
@@ -53,29 +93,21 @@ client.on('messageCreate', message => {
                 if (typeof checkStatus == 'undefined') {
                     message.channel.send({ embeds: [embedFalse] });
                 }
-                const playerID = playerJSON.data[0].id;
-                const playerELO = playerJSON.data[0].attributes.elo;
-                const playerRank = JSON.stringify(playerJSON.data[0].attributes.rank);
-                const playerWins = playerJSON.data[0].attributes.wins;
-                const playerLoss = playerJSON.data[0].attributes.losses;
-                const playerPercent = ((playerWins / (playerWins + playerLoss)) * 100).toFixed(2);
-                const userTemp = JSON.stringify(playerJSON['data'][0]['attributes']['user-name']);
-                const playerUserName = userTemp.toLowerCase();
-
+                
                 if (command == 'link') {
                     client.db('elevenBot').collection('Users').find({ discordID: message.author.id }).toArray(function(err, res) {
                         if (!res.length) {
                             // Checks if the user has a record within the database.
-                            client.db('elevenBot').collection('Users').find({ elevenID: playerID }).toArray(function(err, result) {
+                            client.db('elevenBot').collection('Users').find({ elevenID: playerID(playerJSON) }).toArray(function(err, result) {
                                 if (!result.length) {
                                     // If user has no records within the database, it will start the verification process.
                                     var num = Math.floor(Math.random()*(999-100+1)+100);
                                     var word = randomWords();
                                     // Verification is a combination of a random word with a random number
                                     word += num;
-                                    var input = { discordID: message.author.id, elevenID: playerID, verifyStatus: 'false', verifyNum: word };
+                                    var input = { discordID: message.author.id, elevenID: playerID(playerJSON), verifyStatus: 'false', verifyNum: word };
                                     // User data storage includes their discord user id number, ETT user id number, verification status, and verification code.
-                                    if (stringFix(playerUserName).includes(search.toLowerCase()) ) {
+                                    if (stringFix(playerUserName(rawUser(playerJSON))).includes(search.toLowerCase()) ) {
                                         client.db('elevenBot').collection('Users').insertOne(input, function(err, res) {
                                             const embedLink = new MessageEmbed()
                                                 .setColor('#ff0000')
@@ -171,24 +203,20 @@ client.on('messageCreate', message => {
 
                 const embedTrue = new MessageEmbed()
                 .setColor('#ff0000')
-                .setTitle(`${stringFix(userTemp)}'s Profile`)
-                .setURL(`https://elevenvr.net/eleven/${stringFix(playerID)}`)
+                .setTitle(`${stringFix(rawUser(playerJSON))}'s Profile`)
+                .setURL(`https://elevenvr.net/eleven/${stringFix(playerID(playerJSON))}`)
                 .setDescription('Player Details:')
                 .addFields(
-                    { name: 'ELO', value: `${playerELO}`, inline: true },
-                    { name: 'Rank', value: `${playerRank}`, inline: true },
-                    { name: 'Win %', value: `${playerPercent}%` },
-                    { name: 'Wins', value: `${playerWins}`, inline: true },
-                    { name: 'Losses', value: `${playerLoss}`, inline: true },
+                    { name: 'ELO', value: `${playerELO(playerJSON)}`, inline: true },
+                    { name: 'Rank', value: `${playerRank(playerJSON)}`, inline: true },
+                    { name: 'Win %', value: `${playerPercent(playerWins(playerJSON), playerLoss(playerJSON))}%` },
+                    { name: 'Wins', value: `${playerWins(playerJSON)}`, inline: true },
+                    { name: 'Losses', value: `${playerLoss(playerJSON)}`, inline: true },
                 )
                 .setFooter({ text: 'Eleven Table Tennis' });
 
                 if (command == 'search') {
-                    if (stringFix(playerUserName).includes(search.toLowerCase())) {
-                        message.channel.send({ embeds: [embedTrue] });
-                    } else {
-                        message.channel.send({ embeds: [embedFalse] });
-                    }
+                    console.log(message.content);
                 }
 
                 const userExists = new MessageEmbed()
