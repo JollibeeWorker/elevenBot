@@ -27,6 +27,13 @@ function stringFix(str) {
     return strFix;
 }
 
+function userFix(str) {
+    const fix1 = str.replace('<', '');
+    const fix2 = fix1.replace('>', '');
+    const fix3 = fix2.replace('@', '');
+    return fix3;
+}
+
 function getCommand(str) {
     const command = str.split(' ').shift();
     return command;
@@ -90,9 +97,6 @@ client.on('messageCreate', message => {
                 const search = alter.replace(`${command} `, '');
                 const playerJSON = await playerSearch(search);
                 const checkStatus = playerJSON.data[0];
-                if (typeof checkStatus == 'undefined') {
-                    message.channel.send({ embeds: [embedFalse] });
-                }
                 
                 if (command == 'link') {
                     client.db('elevenBot').collection('Users').find({ discordID: message.author.id }).toArray(function(err, res) {
@@ -201,23 +205,59 @@ client.on('messageCreate', message => {
                     
                 }
 
-                const embedTrue = new MessageEmbed()
-                .setColor('#ff0000')
-                .setTitle(`${stringFix(rawUser(playerJSON))}'s Profile`)
-                .setURL(`https://elevenvr.net/eleven/${stringFix(playerID(playerJSON))}`)
-                .setDescription('Player Details:')
-                .addFields(
-                    { name: 'ELO', value: `${playerELO(playerJSON)}`, inline: true },
-                    { name: 'Rank', value: `${playerRank(playerJSON)}`, inline: true },
-                    { name: 'Win %', value: `${playerPercent(playerWins(playerJSON), playerLoss(playerJSON))}%` },
-                    { name: 'Wins', value: `${playerWins(playerJSON)}`, inline: true },
-                    { name: 'Losses', value: `${playerLoss(playerJSON)}`, inline: true },
-                )
-                .setFooter({ text: 'Eleven Table Tennis' });
-
                 if (command == 'search') {
-                    console.log(message.content);
+                    if (search.includes('@')) {
+                        client.db('elevenBot').collection('Users').find({ discordID: userFix(search) }).toArray(async function(err, res) {
+                            if (!res.length) {
+                                message.channel.send({ embeds: [userNoLink] });
+                            } else {
+                                const json = await idSearch(res[0].elevenID);
+                                const searchName = JSON.stringify(json['data']['attributes']['user-name']);
+                                const atLookup = new MessageEmbed()
+                                    .setColor('#ff0000')
+                                    .setTitle(`${stringFix(searchName)}'s Profile`)
+                                    .setURL(`https://elevenvr.net/eleven/${stringFix(json.data.id)}`)
+                                    .setDescription('Player Details:')
+                                    .addFields(
+                                        { name: 'ELO', value: `${json.data.attributes.elo}`, inline: true },
+                                        { name: 'Rank', value: `${json.data.attributes.rank}`, inline: true },
+                                        { name: 'Win %', value: `${playerPercent(json.data.attributes.wins, json.data.attributes.losses)}%` },
+                                        { name: 'Wins', value: `${json.data.attributes.wins}`, inline: true },
+                                        { name: 'Losses', value: `${json.data.attributes.losses}`, inline: true },
+                                    )
+                                    .setFooter({ text: 'Eleven Table Tennis' });
+
+                                message.channel.send({ embeds: [atLookup] });
+                            }
+                        });
+                        
+                    } else if (typeof checkStatus == 'undefined') {
+                        message.channel.send({ embeds: [embedFalse] });
+                    } else {
+                        const embedTrue = new MessageEmbed()
+                            .setColor('#ff0000')
+                            .setTitle(`${stringFix(rawUser(playerJSON))}'s Profile`)
+                            .setURL(`https://elevenvr.net/eleven/${stringFix(playerID(playerJSON))}`)
+                            .setDescription('Player Details:')
+                            .addFields(
+                                { name: 'ELO', value: `${playerELO(playerJSON)}`, inline: true },
+                                { name: 'Rank', value: `${playerRank(playerJSON)}`, inline: true },
+                                { name: 'Win %', value: `${playerPercent(playerWins(playerJSON), playerLoss(playerJSON))}%` },
+                                { name: 'Wins', value: `${playerWins(playerJSON)}`, inline: true },
+                                { name: 'Losses', value: `${playerLoss(playerJSON)}`, inline: true },
+                            )
+                            .setFooter({ text: 'Eleven Table Tennis' });
+
+                        message.channel.send({ embeds: [embedTrue] });
+                    }
+
                 }
+
+                
+                const userNoLink = new MessageEmbed()
+                    .setColor('#ff0000')
+                    .setTitle('User has not linked their ETT account to Discord')
+                    .setFooter({ text: 'Eleven Table Tennis' });
 
                 const userExists = new MessageEmbed()
                     .setColor('#ff0000')
@@ -232,7 +272,7 @@ client.on('messageCreate', message => {
                 const verifySuccess = new MessageEmbed()
                     .setColor('#ff0000')
                     .setTitle('Successfully verified!')
-                    .setDescription('Type "!e stats" to view your stats.')
+                    .setDescription('You can now change your username back. Type "!e stats" to view your stats.')
                     .setFooter({ text: 'Eleven Table Tennis' });
 
                 const verifyFail = new MessageEmbed()
