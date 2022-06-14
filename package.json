@@ -4,6 +4,7 @@
     "dotenv": "^16.0.1",
     "mongodb": "^4.7.0",
     "node-fetch": "^2.6.7",
+    "pm2": "^5.2.0",
     "random-words": "^1.1.2"
   }
 }

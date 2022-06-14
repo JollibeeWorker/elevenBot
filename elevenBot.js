@@ -45,7 +45,7 @@ function playerID(json) {
 }
 
 function playerELO(json) {
-    const ELO = json.data[0].elo;
+    const ELO = json.data[0].attributes.elo;
     return ELO;
 }
 
@@ -234,6 +234,7 @@ client.on('messageCreate', message => {
                     } else if (typeof checkStatus == 'undefined') {
                         message.channel.send({ embeds: [embedFalse] });
                     } else {
+                        console.log(playerJSON.data.attributes);
                         const embedTrue = new MessageEmbed()
                             .setColor('#ff0000')
                             .setTitle(`${stringFix(rawUser(playerJSON))}'s Profile`)
