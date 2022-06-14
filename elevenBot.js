@@ -234,7 +234,6 @@ client.on('messageCreate', message => {
                     } else if (typeof checkStatus == 'undefined') {
                         message.channel.send({ embeds: [embedFalse] });
                     } else {
-                        console.log(playerJSON.data.attributes);
                         const embedTrue = new MessageEmbed()
                             .setColor('#ff0000')
                             .setTitle(`${stringFix(rawUser(playerJSON))}'s Profile`)
